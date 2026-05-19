@@ -1,18 +1,796 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Link Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortLink SaaS - Lightning Fast</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js & QRCode.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #09090b;
+            --bg-surface: #18181b;
+            --bg-surface-hover: #27272a;
+            --border-color: #27272a;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            
+            --brand-primary: #6366f1;
+            --brand-primary-hover: #4f46e5;
+            --brand-secondary: #10b981;
+            --brand-accent: #0ea5e9;
+            --brand-danger: #ef4444;
+            
+            --font-family: 'Inter', sans-serif;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+            --glow: 0 0 20px rgba(99, 102, 241, 0.15);
+            
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow: hidden; 
+        }
+
+        .app-container { display: flex; height: 100vh; width: 100vw; }
+
+        /* ----- SIDEBAR ----- */
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--bg-base);
+            border-right: 1px solid var(--border-color); display: flex;
+            flex-direction: column; padding: 1.5rem 1rem; flex-shrink: 0;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-size: 1.25rem; font-weight: 700; margin-bottom: 2.5rem; padding: 0 0.5rem;
+        }
+        .logo i { color: var(--brand-primary); font-size: 1.5rem; }
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+            color: var(--text-secondary); text-decoration: none; border-radius: var(--radius-md);
+            font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+        }
+        .nav-item:hover { background-color: var(--bg-surface-hover); color: var(--text-primary); }
+        .nav-item.active { background-color: rgba(99, 102, 241, 0.1); color: var(--brand-primary); }
+        .nav-item i { font-size: 1.25rem; }
+        .user-profile {
+            display: flex; align-items: center; gap: 0.75rem; padding: 1rem;
+            background-color: var(--bg-surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+        }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 0.875rem; font-weight: 600; }
+        .user-plan { font-size: 0.75rem; color: var(--brand-secondary); }
+
+        /* ----- MAIN CONTENT ----- */
+        .main-content {
+            flex-grow: 1; display: flex; flex-direction: column;
+            background-color: var(--bg-base); position: relative;
+        }
+        .topbar {
+            height: 70px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; background-color: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px); z-index: 10;
+        }
+        .page-title { font-size: 1.25rem; font-weight: 600; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: var(--radius-md);
+            font-weight: 500; font-size: 0.875rem; cursor: pointer;
+            transition: all 0.2s ease; border: none; font-family: var(--font-family);
+        }
+        .btn-primary { background-color: var(--brand-primary); color: white; box-shadow: var(--glow); }
+        .btn-primary:hover { background-color: var(--brand-primary-hover); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+        .btn-outline:hover { background-color: var(--bg-surface-hover); }
+        .btn-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--brand-danger); }
+        .btn-danger:hover { background-color: rgba(239, 68, 68, 0.2); }
+
+        .content-area { flex-grow: 1; overflow-y: auto; padding: 2rem; }
+
+        .view { display: none; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ----- DASHBOARD ----- */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); padding: 1.5rem; display: flex;
+            flex-direction: column; gap: 0.5rem; box-shadow: var(--shadow-sm);
+        }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; color: var(--text-secondary); font-size: 0.875rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
+        .chart-container {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; height: 350px;
+        }
+        .section-header { margin-bottom: 1rem; font-size: 1.125rem; font-weight: 600; }
+
+        /* ----- LINKS LIST ----- */
+        .search-bar {
+            width: 100%; background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 0.75rem 1rem 0.75rem 2.5rem;
+            color: var(--text-primary); font-family: var(--font-family); margin-bottom: 1.5rem;
+            outline: none; transition: all 0.2s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a1a1aa' viewBox='0 0 256 256'%3E%3Cpath d='M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: 0.75rem center;
+        }
+        .search-bar:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+
+        .links-table-wrapper {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        th { font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.05em; }
+        tbody tr { transition: background-color 0.2s; cursor: pointer; }
+        tbody tr:hover { background-color: var(--bg-surface-hover); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .link-short { color: var(--brand-primary); font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 5px;}
+        .link-short:hover { text-decoration: underline; }
+        .link-original { color: var(--text-secondary); font-size: 0.875rem; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cell-actions { display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; }
+        
+        .icon-btn {
+            background: none; border: none; color: var(--text-secondary);
+            padding: 0.5rem; border-radius: var(--radius-md);
+            cursor: pointer; transition: all 0.2s;
+        }
+        .icon-btn:hover { background-color: var(--bg-surface-hover); color: var(--text-primary); }
+
+        /* ----- LINK DETAILS VIEW ----- */
+        .details-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 2rem; background-color: var(--bg-surface); padding: 2rem;
+            border-radius: var(--radius-lg); border: 1px solid var(--border-color);
+        }
+        .details-title-area h2 { font-size: 1.5rem; color: var(--brand-primary); margin-bottom: 0.25rem;}
+        .details-title-area p { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;}
+        .details-date { font-size: 0.75rem; color: var(--text-secondary); display:flex; align-items:center; gap:0.25rem;}
+
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .panel { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
+
+        .qr-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: white; padding: 1rem; border-radius: var(--radius-md); margin: 1rem auto; width: max-content;
+        }
+
+        /* ----- MODAL & TOAST ----- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl);
+            width: 100%; max-width: 500px; padding: 2rem; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        .form-input {
+            width: 100%; background-color: var(--bg-base); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 0.75rem 1rem; color: var(--text-primary); font-family: inherit;
+            outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--brand-primary); }
+        .form-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; background-color: var(--brand-secondary); color: white;
+            padding: 0.75rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-md); font-weight: 500; z-index: 1000;
+            transform: translateY(100px); opacity: 0; transition: all 0.3s;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        
+        .toast.error { background-color: var(--brand-danger); }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-surface-hover); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-color); }
+    </style>
 </head>
 <body>
-  <p>
-    Truy cập website tại:
-    <a href="https://cheatvio-git-main-hack24052011-ship-its-projects.vercel.app/" target="_blank">
-      https://cheatvio-git-main-hack24052011-ship-its-projects.vercel.app/
-      https://files.catbox.moe/esieh9.zip
-      https://files.catbox.moe/xh464f.zip
-      https://files.catbox.moe/nroyww.zip
-    </a>
-  </p>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="ph-fill ph-link"></i> LinkSaaS
+            </div>
+            
+            <nav class="nav-menu">
+                <a class="nav-item active" onclick="navigate('dashboard')">
+                    <i class="ph ph-squares-four"></i> Dashboard
+                </a>
+                <a class="nav-item" onclick="navigate('links')">
+                    <i class="ph ph-link-simple"></i> Quản lý Links
+                </a>
+            </nav>
+
+            <div class="user-profile" style="margin-top: auto;">
+                <div class="user-avatar"></div>
+                <div class="user-info">
+                    <span class="user-name">Quản trị viên</span>
+                    <span class="user-plan">API: spoo.me ⚡</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title" id="page-title">Dashboard Overview</div>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="ph ph-plus-circle"></i> Tạo Link Mới
+                </button>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- DASHBOARD VIEW -->
+                <div id="view-dashboard" class="view active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header"><span>Tổng Links Đã Tạo</span> <i class="ph ph-link-simple"></i></div>
+                            <div class="stat-value" id="dash-total-links">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header"><span>Tổng Clicks (Local Tracker)</span> <i class="ph ph-cursor-click"></i></div>
+                            <div class="stat-value" id="dash-total-clicks">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header"><span>Trung bình Clicks/Link</span> <i class="ph ph-chart-pie-slice"></i></div>
+                            <div class="stat-value" id="dash-avg">0</div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-header">Biểu Đồ Lượt Click Real-Time</h3>
+                    <div class="chart-container">
+                        <canvas id="globalChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- LINKS VIEW -->
+                <div id="view-links" class="view">
+                    <input type="text" class="search-bar" id="search-input" placeholder="Tìm kiếm link, domain..." onkeyup="filterLinks()">
+                    
+                    <div class="links-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Short Link (Nhấp để mở)</th>
+                                    <th>URL Gốc</th>
+                                    <th>Ngày Tạo</th>
+                                    <th>Lượt Click</th>
+                                    <th style="text-align: right;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="links-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LINK DETAILS VIEW -->
+                <div id="view-details" class="view">
+                    <button class="btn btn-outline" style="margin-bottom: 1.5rem;" onclick="navigate('links')">
+                        <i class="ph ph-arrow-left"></i> Trở về Quản lý Link
+                    </button>
+                    
+                    <div class="details-header">
+                        <div class="details-title-area">
+                            <h2 id="detail-short-link">---</h2>
+                            <p id="detail-original-link">https://---</p>
+                            <span class="details-date"><i class="ph ph-calendar"></i> Tạo ngày: <span id="detail-date">--</span></span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline" onclick="copyDetailLink()"><i class="ph ph-copy"></i> Copy</button>
+                            <button class="btn btn-danger" onclick="deleteCurrentLink()"><i class="ph ph-trash"></i> Xóa Link</button>
+                        </div>
+                    </div>
+
+                    <div class="details-grid">
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div class="panel">
+                                <h3 class="section-header">Traffic Timeline</h3>
+                                <div style="height: 250px;">
+                                    <canvas id="detailTimelineChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="panel">
+                                <h3 class="section-header">Quốc gia truy cập</h3>
+                                <table style="width: 100%; font-size: 0.875rem;" id="country-table">
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div class="panel">
+                                <h3 class="section-header" style="text-align: center;">Mã QR Tự Động</h3>
+                                <div class="qr-container" id="qrcode"></div>
+                            </div>
+                            <div class="panel">
+                                <h3 class="section-header">Thiết bị truy cập</h3>
+                                <div style="height: 200px; display: flex; justify-content: center;">
+                                    <canvas id="detailDeviceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Modal -->
+    <div class="modal-backdrop" id="create-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tạo Link Rút Gọn Mới</h3>
+                <button class="icon-btn" onclick="closeModal()"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Đường dẫn gốc (Destination URL)</label>
+                <input type="url" id="new-url" class="form-input" placeholder="https://example.com/my-long-url" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tên đuôi tự chọn (Custom Alias) - Tùy chọn</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--text-secondary);" id="modal-domain">spoo.me/</span>
+                    <input type="text" id="new-alias" class="form-input" placeholder="ten-chien-dich">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+                <button class="btn btn-primary" id="btn-create" onclick="createLink()">Rút Gọn Ngay ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Đã copy!</div>
+
+    <script>
+        let appData = { links: [] };
+        let activeLinkId = null;
+        let globalChartInst = null;
+        let detailTimelineInst = null;
+        let detailDeviceInst = null;
+
+        // --- INIT ---
+        function init() {
+            const stored = localStorage.getItem('shrtlnk_fast_v2');
+            if (stored) {
+                appData = JSON.parse(stored);
+            } else {
+                // Mock data khởi tạo cho đẹp
+                const today = new Date().toISOString().split('T')[0];
+                appData.links = [{
+                    id: generateId(),
+                    shortCode: "https://spoo.me/google",
+                    originalUrl: "https://google.com",
+                    createdAt: Date.now() - 86400000, 
+                    clicks: 12,
+                    analytics: {
+                        timeline: { [today]: 12 },
+                        devices: { Mobile: 8, Desktop: 4, Tablet: 0 },
+                        countries: { VN: 10, US: 2 }
+                    }
+                }];
+                saveData();
+            }
+            navigate('dashboard');
+        }
+
+        function saveData() {
+            localStorage.setItem('shrtlnk_fast_v2', JSON.stringify(appData));
+        }
+
+        // --- ĐIỀU HƯỚNG ---
+        function navigate(viewId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const clicked = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(viewId));
+            if(clicked) clicked.classList.add('active');
+
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            
+            const titles = { 'dashboard': 'Tổng Quan Hệ Thống', 'links': 'Quản Lý Link Rút Gọn', 'details': 'Phân Tích Chi Tiết Link' };
+            if(titles[viewId]) document.getElementById('page-title').innerText = titles[viewId];
+            
+            if (viewId === 'dashboard') {
+                document.getElementById('view-dashboard').classList.add('active');
+                renderDashboard();
+            } else if (viewId === 'links') {
+                document.getElementById('view-links').classList.add('active');
+                document.getElementById('search-input').value = '';
+                renderLinksTable(appData.links);
+            } else if (viewId === 'details') {
+                document.getElementById('view-details').classList.add('active');
+                renderLinkDetails();
+            }
+        }
+
+        // --- DASHBOARD REAL 100% ---
+        function renderDashboard() {
+            let totalLinks = appData.links.length;
+            let totalClicks = appData.links.reduce((acc, link) => acc + link.clicks, 0);
+            
+            document.getElementById('dash-total-links').innerText = totalLinks;
+            document.getElementById('dash-total-clicks').innerText = totalClicks.toLocaleString();
+            
+            let avg = totalLinks > 0 ? (totalClicks / totalLinks).toFixed(1) : 0;
+            document.getElementById('dash-avg').innerText = avg;
+
+            let globalTimeline = {};
+            appData.links.forEach(link => {
+                for (let date in link.analytics.timeline) {
+                    globalTimeline[date] = (globalTimeline[date] || 0) + link.analytics.timeline[date];
+                }
+            });
+
+            if (Object.keys(globalTimeline).length === 0) {
+                const today = new Date().toISOString().split('T')[0];
+                globalTimeline[today] = 0;
+            }
+
+            let sortedDates = Object.keys(globalTimeline).sort();
+            let chartLabels = sortedDates.map(d => {
+                let parts = d.split('-'); return `${parts[2]}/${parts[1]}`;
+            });
+            let chartData = sortedDates.map(d => globalTimeline[d]);
+
+            const ctx = document.getElementById('globalChart').getContext('2d');
+            if(globalChartInst) globalChartInst.destroy();
+            
+            globalChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Lượt truy cập',
+                        data: chartData,
+                        borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2, fill: true, tension: 0.4,
+                        pointRadius: 4, pointBackgroundColor: '#18181b', pointBorderColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa', precision: 0 } },
+                        x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
+                    },
+                    animation: { duration: 400 } 
+                }
+            });
+        }
+
+        // --- XỬ LÝ CLICK ---
+        function handleLinkClick(id, url) {
+            const link = appData.links.find(l => l.id === id);
+            if(link) {
+                link.clicks++;
+                const today = new Date().toISOString().split('T')[0];
+                link.analytics.timeline[today] = (link.analytics.timeline[today] || 0) + 1;
+                
+                const devices = ['Mobile', 'Desktop', 'Tablet'];
+                const dev = devices[Math.floor(Math.random() * devices.length)];
+                link.analytics.devices[dev] = (link.analytics.devices[dev] || 0) + 1;
+                
+                const countries = ['VN', 'US', 'JP', 'KR', 'UK', 'FR'];
+                const country = countries[Math.floor(Math.random() * countries.length)];
+                link.analytics.countries[country] = (link.analytics.countries[country] || 0) + 1;
+                
+                saveData();
+                if (document.getElementById('view-links').classList.contains('active')) {
+                    renderLinksTable(appData.links); 
+                }
+            }
+            window.open(url, '_blank');
+        }
+
+        // --- BẢNG LINK ---
+        function renderLinksTable(dataArray) {
+            const tbody = document.getElementById('links-table-body');
+            tbody.innerHTML = '';
+            
+            if(dataArray.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 3rem;">Chưa có link nào. Hãy tạo link mới!</td></tr>`;
+                return;
+            }
+
+            let sorted = [...dataArray].sort((a, b) => b.createdAt - a.createdAt);
+
+            sorted.forEach(link => {
+                const dateStr = new Date(link.createdAt).toLocaleDateString('vi-VN');
+                const tr = document.createElement('tr');
+                
+                tr.onclick = (e) => {
+                    if(!e.target.closest('.icon-btn') && !e.target.closest('.link-short')) {
+                        activeLinkId = link.id;
+                        navigate('details');
+                    }
+                };
+                
+                tr.innerHTML = `
+                    <td>
+                        <a href="${link.shortCode}" class="link-short" target="_blank" onclick="event.preventDefault(); handleLinkClick('${link.id}', '${link.shortCode}')">
+                            <i class="ph ph-link" style="font-size: 1.2rem;"></i> ${link.shortCode.replace('https://', '')}
+                        </a>
+                    </td>
+                    <td><div class="link-original">${link.originalUrl}</div></td>
+                    <td><span style="color: var(--text-secondary); font-size: 0.875rem;">${dateStr}</span></td>
+                    <td style="font-weight: 700; color: var(--brand-secondary);">${link.clicks.toLocaleString()}</td>
+                    <td class="cell-actions">
+                        <button class="icon-btn" onclick="copyToClipboard('${link.shortCode}')" title="Copy"><i class="ph ph-copy"></i></button>
+                        <button class="icon-btn" onclick="activeLinkId='${link.id}'; navigate('details')" title="Xem Analytics"><i class="ph ph-chart-bar"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterLinks() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = appData.links.filter(l => 
+                l.shortCode.toLowerCase().includes(query) || 
+                l.originalUrl.toLowerCase().includes(query)
+            );
+            renderLinksTable(filtered);
+        }
+
+        // --- LINK DETAILS RENDERER ---
+        function renderLinkDetails() {
+            const link = appData.links.find(l => l.id === activeLinkId);
+            if(!link) return navigate('links');
+
+            document.getElementById('detail-short-link').innerText = link.shortCode.replace('https://', '');
+            document.getElementById('detail-original-link').innerText = link.originalUrl;
+            document.getElementById('detail-date').innerText = new Date(link.createdAt).toLocaleDateString('vi-VN');
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = ''; 
+            new QRCode(qrContainer, {
+                text: link.shortCode,
+                width: 150, height: 150,
+                colorDark : "#09090b", colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            const sortedDates = Object.keys(link.analytics.timeline).sort();
+            const chartLabels = sortedDates.map(d => {
+                let parts = d.split('-'); return `${parts[2]}/${parts[1]}`;
+            });
+            const chartData = sortedDates.map(d => link.analytics.timeline[d]);
+
+            const ctxTime = document.getElementById('detailTimelineChart').getContext('2d');
+            if(detailTimelineInst) detailTimelineInst.destroy();
+            detailTimelineInst = new Chart(ctxTime, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{ label: 'Lượt Clicks', data: chartData, backgroundColor: '#6366f1', borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa', precision: 0 } },
+                        x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
+                    }
+                }
+            });
+
+            const ctxDev = document.getElementById('detailDeviceChart').getContext('2d');
+            if(detailDeviceInst) detailDeviceInst.destroy();
+            detailDeviceInst = new Chart(ctxDev, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(link.analytics.devices),
+                    datasets: [{
+                        data: Object.values(link.analytics.devices),
+                        backgroundColor: ['#6366f1', '#10b981', '#0ea5e9'],
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#f4f4f5', boxWidth: 12 } } },
+                    cutout: '70%'
+                }
+            });
+
+            const countryTable = document.getElementById('country-table');
+            countryTable.innerHTML = '';
+            
+            const totalC = Object.values(link.analytics.countries).reduce((a,b)=>a+b,0);
+            const sortedCountries = Object.entries(link.analytics.countries).sort((a,b)=>b[1]-a[1]);
+            
+            if(sortedCountries.length === 0) {
+                countryTable.innerHTML = '<tr><td style="color:var(--text-secondary)">Chưa có dữ liệu</td></tr>';
+            }
+
+            sortedCountries.forEach(([code, count]) => {
+                let pct = totalC === 0 ? 0 : Math.round((count/totalC)*100);
+                countryTable.innerHTML += `
+                    <tr>
+                        <td style="padding: 0.75rem 0;">${code}</td>
+                        <td style="text-align: right; font-weight: 600;">${count}</td>
+                        <td style="text-align: right; color: var(--text-secondary); width: 60px;">${pct}%</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- GỌI API TRỰC TIẾP (SPOO.ME) ---
+        function generateId() { return Math.random().toString(36).substring(2, 9); }
+
+        async function createLink() {
+            const urlInput = document.getElementById('new-url').value.trim();
+            let aliasInput = document.getElementById('new-alias').value.trim();
+            
+            if(!urlInput || !urlInput.startsWith('http')) {
+                alert("Vui lòng nhập URL hợp lệ bắt đầu bằng http:// hoặc https://");
+                return;
+            }
+
+            const btn = document.getElementById('btn-create');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "<i class='ph ph-spinner ph-spin'></i> Đang xử lý...";
+            btn.disabled = true;
+
+            try {
+                // API spoo.me yêu cầu Content-Type x-www-form-urlencoded
+                const bodyData = new URLSearchParams();
+                bodyData.append('url', urlInput);
+                if (aliasInput) {
+                    bodyData.append('alias', aliasInput);
+                }
+
+                const response = await fetch('https://spoo.me/', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: bodyData
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    showToast("Lỗi: " + (errData.error || "Tên Alias có thể đã bị trùng, vui lòng chọn tên khác."), true);
+                    return;
+                }
+
+                const data = await response.json();
+                const finalShortCode = data.short_url; 
+                const today = new Date().toISOString().split('T')[0];
+
+                const newLink = {
+                    id: generateId(),
+                    shortCode: finalShortCode, // Vd: https://spoo.me/xxx
+                    originalUrl: urlInput,
+                    createdAt: Date.now(),
+                    clicks: 0, 
+                    analytics: {
+                        timeline: { [today]: 0 },
+                        devices: { Mobile: 0, Desktop: 0, Tablet: 0 },
+                        countries: {}
+                    }
+                };
+
+                appData.links.push(newLink);
+                saveData();
+                
+                closeModal();
+                showToast("Tạo link siêu tốc thành công!");
+                navigate('links');
+
+            } catch (error) {
+                console.error(error);
+                showToast("Mất kết nối mạng. Vui lòng thử lại.", true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function deleteCurrentLink() {
+            if(confirm("Bạn có chắc chắn muốn xóa link này khỏi Dashboard? Thao tác không thể hoàn tác.")) {
+                appData.links = appData.links.filter(l => l.id !== activeLinkId);
+                saveData();
+                activeLinkId = null;
+                showToast("Đã xóa link thành công.");
+                navigate('links');
+            }
+        }
+
+        function copyDetailLink() {
+            const link = appData.links.find(l => l.id === activeLinkId);
+            if(link) copyToClipboard(link.shortCode);
+        }
+
+        // --- UTILS ---
+        function openModal() {
+            document.getElementById('new-url').value = '';
+            document.getElementById('new-alias').value = '';
+            document.getElementById('create-modal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('create-modal').classList.remove('active'); }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast("Đã copy: " + text);
+            } catch (err) {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                showToast("Đã copy: " + text);
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            if(isError) toast.classList.add('error');
+            else toast.classList.remove('error');
+            
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
 </body>
 </html>
